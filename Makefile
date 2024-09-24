@@ -7,9 +7,5 @@ QEMU_ARGS += -machine virt
 QEMU_ARGS += -vga std
 QEMU_ARGS += -bios none
 
-
-test: test.c
-	echo "hello"
-
-test.c:
-	echo "step 1"
+run:
+	$(QEMU) $(QEMU_ARGS)
