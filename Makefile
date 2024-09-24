@@ -6,6 +6,7 @@ QEMU_ARGS += -d cpu_reset
 QEMU_ARGS += -machine virt
 QEMU_ARGS += -vga std
 QEMU_ARGS += -bios none
+QEMU_ARGS += -monitor stdio
 
 run:
 	$(QEMU) $(QEMU_ARGS)
