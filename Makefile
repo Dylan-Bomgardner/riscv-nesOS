@@ -62,7 +62,7 @@ SBI_LINKER = $(SBI_DIR)/linker.ld
 
 .PHONY: hello sbi run clean
 
-hello: $(HELLO_WORLD_TARGET)
+hello: clean $(HELLO_WORLD_TARGET)
 	
 # links all .o files.
 $(HELLO_WORLD_TARGET): $(HELLO_WORLD_OBJS)
@@ -76,7 +76,7 @@ $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.c
 $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
 	@$(G++) -c $< -o $@
 
-sbi: $(SBI_TARGET)
+sbi: clean $(SBI_TARGET)
 	
 # links all .o files.
 $(SBI_TARGET): $(SBI_OBJS)
@@ -91,7 +91,7 @@ $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
 	@$(G++) -c $< -o $@
 
 run:
-	$(QEMU) $(QEMU_ARGS)
+	$(QEMU) $(QEMU_ARGS) -bios $(wildcard $(BUILD_DIR)/*.elf)
 
 clean:
 	rm -rf $(BUILD_DIR)/*
