@@ -10,7 +10,7 @@ BUILD_DIR = build
 
 
 # QEMU_ARGS += -cpu shakti-c
-# # Must specify a machine type - from the qemu documentation
+# Must specify a machine type - from the qemu documentation
 QEMU_ARGS += -machine virt
 # QEMU_ARGS += -vga std
 QEMU_ARGS += -bios build/thing.elf
