@@ -5,7 +5,6 @@ G++ = riscv64-unknown-elf-g++
 G++_ARGS = -nostdlib
 G++_ARGS += -nostartfiles --static
 
-HELLO_WORLD_DIR = hello_world
 BUILD_DIR = build
 
 
@@ -18,38 +17,78 @@ QEMU_ARGS += -serial stdio
 QEMU_ARGS += -device virtio-vga
 
 #Source Files
-# HELLO_WORLD_SRC = $(wildcard $(HELLO_WORLD_DIR/*.c))
+
+#####################
+# Hello World Example
+#####################
+
+HELLO_WORLD_DIR = hello_world
+
+#Souce Files
 HELLO_WORLD_SRC_CPP = $(wildcard $(HELLO_WORLD_DIR)/*.cpp)
 HELLO_WORLD_SRC_S = $(wildcard $(HELLO_WORLD_DIR)/*.s)
-# HELLO_WORLD_S_SRC = $(wildcard $(HELLO_WORLD_DIR)/*.s)
+
 #Object Files
 HELLO_WORLD_OBJS = $(patsubst $(HELLO_WORLD_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(HELLO_WORLD_SRC_CPP))
 HELLO_WORLD_OBJS += $(patsubst $(HELLO_WORLD_DIR)/%.s,$(BUILD_DIR)/%.o,$(HELLO_WORLD_SRC_S))
 
-# Executable Names
+# Executable Name
 HELLO_WORLD_TARGET = $(BUILD_DIR)/hello_world.elf
 
-#Linker Files
+#Linker File
 HELLO_WORLD_LINKER = $(HELLO_WORLD_DIR)/linker.ld
 
-.PHONY: hello run clean
+#####################
+# SBI
+#####################
+
+SBI_DIR = sbi
+
+#Souce Files
+SBI_SRC_CPP = $(wildcard $(SBI_DIR)/*.cpp)
+SBI_SRC_S = $(wildcard $(SBI_DIR)/*.s)
+
+#Object Files
+SBI_OBJS = $(patsubst $(SBI_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SBI_SRC_CPP))
+SBI_OBJS += $(patsubst $(SBI_DIR)/%.s,$(BUILD_DIR)/%.o,$(SBI_SRC_S))
+
+# Executable Name
+SBI_TARGET = $(BUILD_DIR)/sbi.elf
+
+#Linker File
+SBI_LINKER = $(SBI_DIR)/linker.ld
+
+
+
+.PHONY: hello sbi run clean
 
 hello: $(HELLO_WORLD_TARGET)
 	
 # links all .o files.
-# creates the file in the name $(HELLO_WORLD_TARGET)
 $(HELLO_WORLD_TARGET): $(HELLO_WORLD_OBJS)
 	$(G++) $(G++_ARGS) -T $(HELLO_WORLD_LINKER) -o $@ $^
 
-# $(G++) -o $@ $^
-
-#compiiles each .c file into a .o file without linking.
+#compiiles each .cpp
 $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.c
-# echo $(HELLO_WORLD_SRC)
 	@$(G++) -c $< -o $@
 
+#assembles .s files
 $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
-	@$(G++) -c hello_world/hello_world.s -o build/hello_world.o
+	@$(G++) -c $< -o $@
+
+sbi: $(SBI_TARGET)
+	
+# links all .o files.
+$(SBI_TARGET): $(SBI_OBJS)
+	$(G++) $(G++_ARGS) -T $(SBI_LINKER) -o $@ $^
+
+#compiles .cpp files
+$(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.cpp
+	@$(G++) -c $< -o $@
+
+#assembles .s files
+$(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
+	@$(G++) -c $< -o $@
 
 run:
 	$(QEMU) $(QEMU_ARGS)
