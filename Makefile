@@ -1,20 +1,27 @@
 # Makefile
 QEMU = qemu-system-riscv64
 
-G++ = riscv64-unknown-elf-g++
+G++ = riscv64-unknown-elf-g++ -mcmodel=medany
 G++_ARGS = -nostdlib
-G++_ARGS += -nostartfiles --static
+G++_ARGS += -nostartfiles
+G++_ARGE += -ffreestanding
+G++_ARGS += -mcmodel=medany
+
 
 BUILD_DIR = build
 
 
-# QEMU_ARGS += -cpu shakti-c
+QEMU_ARGS += -cpu rv64 -smp 4 -m 128M
 # Must specify a machine type - from the qemu documentation
+
+# QEMU_ARGS += -nographic
 QEMU_ARGS += -machine virt
 # QEMU_ARGS += -vga std
 QEMU_ARGS += -bios build/thing.elf
 QEMU_ARGS += -serial stdio
-QEMU_ARGS += -device virtio-vga
+QEMU_ARGS += -device virtio-gpu-device
+QEMU_ARGS += -device virtio-net-device
+# QEMU_ARGS += 
 
 #Source Files
 
@@ -42,7 +49,7 @@ HELLO_WORLD_LINKER = $(HELLO_WORLD_DIR)/linker.ld
 # SBI
 #####################
 
-SBI_DIR = sbi
+SBI_DIR = bootloader
 
 #Souce Files
 SBI_SRC_CPP = $(wildcard $(SBI_DIR)/*.cpp)
@@ -53,7 +60,7 @@ SBI_OBJS = $(patsubst $(SBI_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SBI_SRC_CPP))
 SBI_OBJS += $(patsubst $(SBI_DIR)/%.s,$(BUILD_DIR)/%.o,$(SBI_SRC_S))
 
 # Executable Name
-SBI_TARGET = $(BUILD_DIR)/sbi.elf
+SBI_TARGET = $(BUILD_DIR)/bootloader.elf
 
 #Linker File
 SBI_LINKER = $(SBI_DIR)/linker.ld
@@ -61,6 +68,21 @@ SBI_LINKER = $(SBI_DIR)/linker.ld
 
 
 .PHONY: hello sbi run clean
+
+sbi: clean $(SBI_TARGET)
+	
+# links all .o files.
+$(SBI_TARGET): $(SBI_OBJS)
+	$(G++) $(G++_ARGS) -T $(SBI_LINKER) -o $@ $^
+
+#compiles .cpp files
+$(BUILD_DIR)/%.o: $(SBI_DIR)/%.cpp
+	@$(G++) -c $< -o $@
+
+#assembles .s files
+$(BUILD_DIR)/%.o: $(SBI_DIR)/%.s
+	@$(G++) -c $< -o $@
+
 
 hello: clean $(HELLO_WORLD_TARGET)
 	
@@ -70,25 +92,11 @@ $(HELLO_WORLD_TARGET): $(HELLO_WORLD_OBJS)
 
 #compiiles each .cpp
 $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.c
-	@$(G++) -c $< -o $@
+	$(G++) -c $< -o $@
 
 #assembles .s files
 $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
-	@$(G++) -c $< -o $@
-
-sbi: clean $(SBI_TARGET)
-	
-# links all .o files.
-$(SBI_TARGET): $(SBI_OBJS)
-	$(G++) $(G++_ARGS) -T $(SBI_LINKER) -o $@ $^
-
-#compiles .cpp files
-$(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.cpp
-	@$(G++) -c $< -o $@
-
-#assembles .s files
-$(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
-	@$(G++) -c $< -o $@
+	$(G++) -c $< -o $@
 
 run:
 	$(QEMU) $(QEMU_ARGS) -bios $(wildcard $(BUILD_DIR)/*.elf)
