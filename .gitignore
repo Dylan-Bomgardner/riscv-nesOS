@@ -3,5 +3,6 @@
 *.elf
 *.out
 *.exe
+rust/target/
 *.dts
 *.dtb
