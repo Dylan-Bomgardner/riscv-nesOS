@@ -3,3 +3,5 @@
 *.elf
 *.out
 *.exe
+*.dts
+*.dtb
