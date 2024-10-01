@@ -17,10 +17,9 @@ QEMU_ARGS += -cpu rv64 -smp 4 -m 128M
 # QEMU_ARGS += -nographic
 QEMU_ARGS += -machine virt
 # QEMU_ARGS += -vga std
-QEMU_ARGS += -bios build/thing.elf
 QEMU_ARGS += -serial stdio
-QEMU_ARGS += -device virtio-gpu-device
-QEMU_ARGS += -device virtio-net-device
+QEMU_ARGS += -device virtio-gpu-pci
+QEMU_ARGS += -device virtio-net-pci
 # QEMU_ARGS += 
 
 #Source Files
@@ -65,11 +64,14 @@ SBI_TARGET = $(BUILD_DIR)/bootloader.elf
 #Linker File
 SBI_LINKER = $(SBI_DIR)/linker.ld
 
+#device tree
+SBI_DTB = build/bootloader.dtb
+
 
 
 .PHONY: hello sbi run clean
 
-sbi: clean $(SBI_TARGET)
+sbi: clean dtb $(SBI_TARGET)
 	
 # links all .o files.
 $(SBI_TARGET): $(SBI_OBJS)
@@ -84,7 +86,7 @@ $(BUILD_DIR)/%.o: $(SBI_DIR)/%.s
 	@$(G++) -c $< -o $@
 
 
-hello: clean $(HELLO_WORLD_TARGET)
+hello: clean $(HELLO_WORLD_TARGET) dtb
 	
 # links all .o files.
 $(HELLO_WORLD_TARGET): $(HELLO_WORLD_OBJS)
@@ -97,6 +99,10 @@ $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.c
 #assembles .s files
 $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
 	$(G++) -c $< -o $@
+
+dtb:
+	$(QEMU) $(QEMU_ARGS) -machine dumpdtb=$(SBI_DTB)
+	dtc -I dtb -O dts $(SBI_DTB) -o build/devicetree.dts
 
 run:
 	$(QEMU) $(QEMU_ARGS) -bios $(wildcard $(BUILD_DIR)/*.elf)
