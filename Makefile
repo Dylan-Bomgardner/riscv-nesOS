@@ -27,7 +27,7 @@ QEMU_ARGS += -machine virt
 # QEMU_ARGS += -vga std
 QEMU_ARGS += -bios build/thing.elf
 QEMU_ARGS += -serial stdio
-QEMU_ARGS += -device virtio-gpu-device
+QEMU_ARGS += -device virtio-vga
 QEMU_ARGS += -device virtio-net-device
 # QEMU_ARGS += 
 

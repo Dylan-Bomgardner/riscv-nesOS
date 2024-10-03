@@ -4,7 +4,7 @@
 #![no_std]
 mod util;
 mod dev;
-use core::arch::asm;
+use core::{arch::asm, fmt::Write, panic::PanicInfo};
 
 // ///////////////////////////////////
 // / RUST MACROS
@@ -13,6 +13,7 @@ use core::arch::asm;
 macro_rules! print
 {
 	($($args:tt)+) => ({
+		let _ = write!(dev::uart::Writer, $($args)+);
 	});
 }
 #[macro_export]
@@ -33,14 +34,14 @@ macro_rules! println
 // / LANGUAGE STRUCTURES / FUNCTIONS
 // ///////////////////////////////////
 #[panic_handler]
-fn panic(info: &core::panic::PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
 	print!("Aborting: ");
 	if let Some(_p) = info.location() {
 		println!(
 				 "line {}, file {}: {}",
 				 _p.line(),
 				 _p.file(),
-				 info.message().unwrap()
+				 info.message()
 		);
 	}
 	else {
