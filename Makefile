@@ -31,7 +31,8 @@ QEMU_ARGS += -device virtio-gpu-device
 QEMU_ARGS += -device virtio-net-device
 # QEMU_ARGS += 
 
-.PHONY: hello sbi run clean rust
+.PHONY: run clean rust
+all: rust run
 
 rust: 
 	cargo +nightly build --target riscv64gc-unknown-none-elf 

@@ -3,7 +3,7 @@
 // 10/1/2025
 #![no_std]
 mod util;
-
+mod dev;
 use core::arch::asm;
 
 // ///////////////////////////////////
@@ -13,7 +13,6 @@ use core::arch::asm;
 macro_rules! print
 {
 	($($args:tt)+) => ({
-
 	});
 }
 #[macro_export]
@@ -60,17 +59,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 extern "C"
 fn kmain() {
 	
-	print_str("Hello, World! Check out the Dylaedin Operating System!\n");
+	dev::uart::print_str("Hello, World! Check out the Dylaedin Operating System!\n");
 	loop {}
-}
-
-fn print_char(c: char) {
-	util::std::memset(0x10000000, c as u8);
-}
-
-fn print_str(s: &str) {
-	for c in s.chars() {
-		print_char(c);
-	}
 }
 
