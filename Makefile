@@ -35,7 +35,7 @@ QEMU_ARGS += -device virtio-net-device
 all: rust run
 
 rust: 
-	cargo +nightly build --target riscv64gc-unknown-none-elf 
+	cargo build --target riscv64gc-unknown-none-elf 
 	$(G++) $(G++_ARGS) $(LINKER_SCRIPT) $(INCLUDES) -o $(OUT) $(SOURCES_ASM) $(LIBS) $(LIB) -o $(BUILD_DIR)/$(OUT)
 run:
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT)

@@ -32,8 +32,6 @@ macro_rules! println
 // ///////////////////////////////////
 // / LANGUAGE STRUCTURES / FUNCTIONS
 // ///////////////////////////////////
-#[no_mangle]
-extern "C" fn eh_personality() {}
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
 	print!("Aborting: ");
