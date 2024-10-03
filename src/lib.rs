@@ -2,6 +2,8 @@
 // Caedin and Dylan
 // 10/1/2025
 #![no_std]
+mod util;
+
 use core::arch::asm;
 
 // ///////////////////////////////////
@@ -47,11 +49,6 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 	else {
 		println!("no information available.");
 	}
-	abort();
-}
-#[no_mangle]
-extern "C"
-fn abort() -> ! {
 	loop {
 		unsafe {
 			asm!("wfi", options(nomem, nostack, preserves_flags));
@@ -63,17 +60,12 @@ fn abort() -> ! {
 extern "C"
 fn kmain() {
 	
-	print_str("Hello, World! Check out the Dylaedin Operating System!");
+	print_str("Hello, World! Check out the Dylaedin Operating System!\n");
 	loop {}
 }
 
 fn print_char(c: char) {
-	unsafe {
-		//create a pointer to 0x10000000;
-		let ptr = 0x10000000 as *mut u32;
-		//set to 0x64
-		ptr.write_volatile(c as u32);
-	}
+	util::std::memset(0x10000000, c as u8);
 }
 
 fn print_str(s: &str) {

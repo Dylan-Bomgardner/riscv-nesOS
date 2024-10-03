@@ -5,3 +5,4 @@
 *.exe
 build
 .vscode
+target
