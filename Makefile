@@ -1,11 +1,19 @@
 # Makefile
 QEMU = qemu-system-riscv64
 
-G++ = riscv64-unknown-elf-g++ -mcmodel=medany
+G++ = riscv64-unknown-elf-g++
 G++_ARGS = -nostdlib
 G++_ARGS += -nostartfiles
 G++_ARGE += -ffreestanding
 G++_ARGS += -mcmodel=medany
+G++_ARGS += -march=rv64gc -mabi=lp64d
+LINKER_SCRIPT=-Tsrc/lds/virt.lds
+TYPE=debug
+RUST_TARGET=./build/riscv64gc-unknown-none-elf/$(TYPE)
+LIBS=-L$(RUST_TARGET)
+SOURCES_ASM=$(wildcard src/asm/*.S)
+LIB=-lrust -lgcc
+OUT=thing.elf
 
 
 BUILD_DIR = build
@@ -25,25 +33,6 @@ QEMU_ARGS += -device virtio-net-device
 
 #Source Files
 
-#####################
-# Hello World Example
-#####################
-
-HELLO_WORLD_DIR = hello_world
-
-#Souce Files
-HELLO_WORLD_SRC_CPP = $(wildcard $(HELLO_WORLD_DIR)/*.cpp)
-HELLO_WORLD_SRC_S = $(wildcard $(HELLO_WORLD_DIR)/*.s)
-
-#Object Files
-HELLO_WORLD_OBJS = $(patsubst $(HELLO_WORLD_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(HELLO_WORLD_SRC_CPP))
-HELLO_WORLD_OBJS += $(patsubst $(HELLO_WORLD_DIR)/%.s,$(BUILD_DIR)/%.o,$(HELLO_WORLD_SRC_S))
-
-# Executable Name
-HELLO_WORLD_TARGET = $(BUILD_DIR)/hello_world.elf
-
-#Linker File
-HELLO_WORLD_LINKER = $(HELLO_WORLD_DIR)/linker.ld
 
 #####################
 # SBI
@@ -67,8 +56,11 @@ SBI_LINKER = $(SBI_DIR)/linker.ld
 
 
 
-.PHONY: hello sbi run clean
+.PHONY: hello sbi run clean rust
 
+rust: 
+	cargo +nightly build --target riscv64gc-unknown-none-elf --target-dir build
+	$(G++) $(G++_ARGS) $(LINKER_SCRIPT) $(INCLUDES) -o $(OUT) $(SOURCES_ASM) $(LIBS) $(LIB) -o $(BUILD_DIR)/$(OUT)
 sbi: clean $(SBI_TARGET)
 	
 # links all .o files.
@@ -98,8 +90,9 @@ $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.c
 $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
 	$(G++) -c $< -o $@
 
+
 run:
-	$(QEMU) $(QEMU_ARGS) -bios $(wildcard $(BUILD_DIR)/*.elf)
+	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT)
 
 clean:
 	rm -rf $(BUILD_DIR)/*
