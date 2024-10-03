@@ -7,7 +7,7 @@ G++_ARGS += -nostartfiles
 G++_ARGE += -ffreestanding
 G++_ARGS += -mcmodel=medany
 G++_ARGS += -march=rv64gc -mabi=lp64d
-LINKER_SCRIPT=-Tsrc/lds/virt.lds
+LINKER_SCRIPT=-Tsrc/lds/linker.lds
 TYPE=debug
 RUST_TARGET=./build/riscv64gc-unknown-none-elf/$(TYPE)
 LIBS=-L$(RUST_TARGET)
@@ -59,7 +59,7 @@ SBI_LINKER = $(SBI_DIR)/linker.ld
 .PHONY: hello sbi run clean rust
 
 rust: 
-	cargo +nightly build --target riscv64gc-unknown-none-elf --target-dir build
+	cargo +nightly build --target riscv64gc-unknown-none-elf --target-dir $(BUILD_DIR)
 	$(G++) $(G++_ARGS) $(LINKER_SCRIPT) $(INCLUDES) -o $(OUT) $(SOURCES_ASM) $(LIBS) $(LIB) -o $(BUILD_DIR)/$(OUT)
 sbi: clean $(SBI_TARGET)
 	
@@ -93,6 +93,8 @@ $(BUILD_DIR)/%.o: $(HELLO_WORLD_DIR)/%.s
 
 run:
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT)
+debug:
+	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT) -S -gdb tcp::1234
 
 clean:
 	rm -rf $(BUILD_DIR)/*

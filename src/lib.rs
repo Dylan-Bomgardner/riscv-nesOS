@@ -1,6 +1,6 @@
-// Steve Operating System
-// Stephen Marz
-// 21 Sep 2019
+// Dylaedin Operating System
+// Caedin and Dylan
+// 10/1/2025
 #![no_std]
 use core::arch::asm;
 
@@ -59,20 +59,10 @@ fn abort() -> ! {
 	}
 }
 
-// ///////////////////////////////////
-// / CONSTANTS
-// ///////////////////////////////////
-
-// ///////////////////////////////////
-// / ENTRY POINT
-// ///////////////////////////////////
 #[no_mangle]
 extern "C"
 fn kmain() {
-	// Main should initialize all sub-systems and get
-	// ready to start scheduling. The last thing this
-	// should do is start the timer.
-	//sit in a while loop doing nothing
+	
 	print_str("Hello, World! Check out the Dylaedin Operating System!");
 	loop {}
 }
@@ -83,7 +73,6 @@ fn print_char(c: char) {
 		let ptr = 0x10000000 as *mut u32;
 		//set to 0x64
 		ptr.write_volatile(c as u32);
-		
 	}
 }
 
@@ -92,8 +81,4 @@ fn print_str(s: &str) {
 		print_char(c);
 	}
 }
-
-// ///////////////////////////////////
-// / RUST MODULES
-// ///////////////////////////////////
 
