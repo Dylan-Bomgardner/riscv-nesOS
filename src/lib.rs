@@ -2,9 +2,21 @@
 // Caedin and Dylan
 // 10/1/2025
 #![no_std]
-mod util;
+/*
+	Mods
+*/
+mod services;
 mod dev;
-use core::{arch::asm, fmt::Write, panic::PanicInfo};
+/*
+	Idk Stuff Here ;)
+ */
+use core::{arch::asm, panic::PanicInfo};
+use dev::uart::Uart;
+use services::console::Console;
+
+/*
+	Globals
+*/
 
 // ///////////////////////////////////
 // / RUST MACROS
@@ -13,7 +25,8 @@ use core::{arch::asm, fmt::Write, panic::PanicInfo};
 macro_rules! print
 {
 	($($args:tt)+) => ({
-		let _ = write!(dev::uart::Writer, $($args)+);
+		use core::fmt::Write;
+		let _ = write!(crate::dev::uart::Uart::new(0x1000_0000 as *mut u8), $($args)+);
 	});
 }
 #[macro_export]
@@ -57,8 +70,9 @@ fn panic(info: &PanicInfo) -> ! {
 #[no_mangle]
 extern "C"
 fn kmain() {
-	
-	dev::uart::print_str("Hello, World! Check out the Dylaedin Operating System!\n");
+	let kernel_uart: Uart = Uart::new(0x1000_0000 as *mut u8);
+	let kconsole: Console = Console::new(kernel_uart);
+	kconsole.listen();
 	loop {}
 }
 
