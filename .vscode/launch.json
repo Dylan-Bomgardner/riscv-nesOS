@@ -4,33 +4,26 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        // attach gdb to remote target :1234 a.out from /opt/riscv/bin/riscv64-unknown-elf-gdb
+        // run just make 
         {
-            "name": "Attach to QEMU RISC-V",
-            "type": "cppdbg",
-            "request": "attach",
-            "program": "${workspaceFolder}/hello_cpp/a.out",
-            // named qemu-system-riscv64
-            "processId": "${command:pickProcess}",
-            "miDebuggerServerAddress": "localhost:1234",
-            "miDebuggerPath": "/opt/riscv/bin/riscv64-unknown-elf-gdb",  // Adjust the path to your GDB binary
-            "useExtendedRemote": true,
-            "setupCommands": [
-              {
-                "description": "Enable pretty-printing for gdb",
-                "text": "-enable-pretty-printing",
-                "ignoreFailures": true
-              }
-            ],
+            "name": "make",
+            "type": "",
+            "request": "launch",
+            "program": "make",
+            "args": ["debug"],
             "stopAtEntry": false,
-            "externalConsole": false,
             "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
             "MIMode": "gdb",
-            "logging": {
-              "trace": true,
-              "traceResponse": true,
-              "engineLogging": true
-            }
-          }
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
     ]
 }

@@ -30,7 +30,7 @@ QEMU_ARGS += -machine virt
 # QEMU_ARGS += -vga std
 QEMU_ARGS += -bios build/thing.elf
 QEMU_ARGS += -serial stdio
-QEMU_ARGS += -device virtio-vga
+QEMU_ARGS += -device virtio-gpu-pci
 QEMU_ARGS += -device virtio-net-device
 # QEMU_ARGS += 
 
@@ -42,7 +42,7 @@ rust:
 	$(G++) $(G++_ARGS) $(LINKER_SCRIPT) $(INCLUDES) -o $(OUT) $(SOURCES_ASM) $(LIBS) $(LIB) -o $(BUILD_DIR)/$(OUT)
 run:
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT)
-debug:
+debug: rust
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT) -S -gdb tcp::1234
 
 dtc:

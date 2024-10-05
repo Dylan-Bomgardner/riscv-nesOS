@@ -19,6 +19,9 @@ _start:
 	addi	a0, a0, 8
 	bltu	a0, a1, 1b
 2:
+
+    la		t2, asm_trap_vector
+	csrw	mtvec, t2
     call kmain
     
 core_loop:

@@ -5,15 +5,16 @@
 /*
 	Mods
 */
-mod services;
+mod srv;
 mod dev;
+mod emu;
 /*
 	Idk Stuff Here ;)
  */
 use core::{arch::asm, panic::PanicInfo};
 use dev::uart::Uart;
-use services::console::Console;
-
+use srv::console::Console;
+use dev::pci;
 /*
 	Globals
 */
@@ -86,8 +87,12 @@ fn kmain() {
 	// Getting the device tree from a register
 	let device_tree_addr: u64 =  get_dts();
 	let kernel_uart: Uart = Uart::new(0x1000_0000 as *mut u8);
-	let kconsole: Console = Console::new(kernel_uart);
-	kconsole.listen();
+	// let kconsole: Console = Console::new(kernel_uart);
+	println!("Hello, World!");
+	let result = pci::pci_check_vendor(0, 1);
+	println!("PCI: \n");
+	println!("Vendor ID: {:#X}", result);
+	//kconsole.listen();
 	loop {}
 }
 
