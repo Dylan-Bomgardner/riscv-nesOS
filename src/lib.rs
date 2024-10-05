@@ -68,8 +68,23 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 #[no_mangle]
+fn get_dts() -> u64 {
+	let value: u64;
+	unsafe {
+		asm!(
+			"mv {0}, a2",
+			out(reg) value
+		);
+	}
+	println!("device tree at: {:X}", value);
+	return value;
+}
+
+#[no_mangle]
 extern "C"
 fn kmain() {
+	// Getting the device tree from a register
+	let device_tree_addr: u64 =  get_dts();
 	let kernel_uart: Uart = Uart::new(0x1000_0000 as *mut u8);
 	let kconsole: Console = Console::new(kernel_uart);
 	kconsole.listen();

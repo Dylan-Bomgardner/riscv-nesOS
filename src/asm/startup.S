@@ -8,6 +8,7 @@ _start:
 
     la sp, _stack_start
     la gp, _global_pointer
+    mv a2, a1
 
 #Initialize BSS, inspo from Stephen Marz
     la 		a0, _bss_start
