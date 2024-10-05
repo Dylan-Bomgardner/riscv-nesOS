@@ -1,4 +1,6 @@
 # Makefile
+BUILD_DIR = build
+
 QEMU = qemu-system-riscv64
 
 G++ = riscv64-unknown-elf-g++
@@ -15,8 +17,9 @@ SOURCES_ASM=$(wildcard src/asm/*.S)
 LIB=-lrust -lgcc
 OUT=thing.elf
 
+DTB_FILE = $(BUILD_DIR)/qemu.dtb
+DTC_FILE = $(BUILD_DIR)/qemu.dtc
 
-BUILD_DIR = build
 
 
 QEMU_ARGS += -cpu rv64 -smp 4 -m 128M
@@ -31,7 +34,7 @@ QEMU_ARGS += -device virtio-vga
 QEMU_ARGS += -device virtio-net-device
 # QEMU_ARGS += 
 
-.PHONY: run clean rust
+.PHONY: run clean rust dtc
 all: rust run
 
 rust: 
@@ -41,6 +44,10 @@ run:
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT)
 debug:
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT) -S -gdb tcp::1234
+
+dtc:
+	$(QEMU) $(QEMU_ARGS) -machine dumpdtb=$(DTB_FILE)
+	 dtc -I dtb -O dts $(DTB_FILE) -o $(DTC_FILE)
 
 clean:
 	rm -rf $(BUILD_DIR)/*
