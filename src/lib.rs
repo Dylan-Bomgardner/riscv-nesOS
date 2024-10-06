@@ -89,10 +89,15 @@ fn kmain() {
 	let kernel_uart: Uart = Uart::new(0x1000_0000 as *mut u8);
 	// let kconsole: Console = Console::new(kernel_uart);
 	println!("Hello, World!");
-	let result = pci::pci_check_vendor(0, 1);
-	println!("PCI: \n");
-	println!("Vendor ID: {:#X}", result);
-	//kconsole.listen();
+
+	let mut result: u16 = pci::pci_check_vendor(0, 0);
+	println!("PCI device: {:X}\n", result);
+	result = pci::pci_check_vendor(0, 1);
+	println!("PCI device: {:X}\n", result);
+	result = pci::pci_check_vendor(0,2);
+	println!("PCI device: {:X}\n", result);
+	// println!("Vendor ID: {:#X}", result);/
+	// kconsole.listen();
 	loop {}
 }
 

@@ -15,16 +15,15 @@ pub fn pci_read_word(bus: u8, slot: u8, func: u8, offset: u8) -> u16 {
     let lslot = slot as u32;
     let lfunc = func as u32;
     let tmp: u16;
-    address = (PCI_BASE) | (lbus << 16) | 
-              (lslot << 11  ) | (lfunc << 8) | (offset & 0xfc) as u32;
+    address = ((PCI_BASE) | (lbus << 20) | 
+              (lslot << 15) | (lfunc << 12)) as u32;
     println!("PCI Read Word: {:x}", address);
 
-    let ptr_write = PCI_CONFIG_ADDRESS as *mut u32;
-    let ptr_read = PCI_CONFIG_DATA as *mut u32;
+    let pci_ptr = address as *mut u32;
     unsafe {
-        ptr_write.write_volatile(address);
-        println!("PCI Read Word: {:x}", ptr_write.read_volatile());
-        tmp = ((ptr_read.read_volatile() >> ((offset & 2) * 8)) & 0xFFFF) as u16;
+        let id = pci_ptr.read_volatile() as u32;
+        println!("PCI Read Word: {:x}", id);
+        tmp = ((id >> 16) & 0xFFFF) as u16;
     }
     tmp
 }
