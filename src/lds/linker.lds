@@ -3,8 +3,6 @@ MEMORY {
   ram  (rwx) : ORIGIN = 0x80000000, LENGTH = 128M
 }
 
-heap_size = 1M;
-
 SECTIONS {
   /* .text and .rodata just go straight into the ROM. We don't need
      to mutate them ever. */
@@ -34,11 +32,11 @@ SECTIONS {
    .data : { 
       _global_pointer = .;
       *(.data)   
-   }
+   } > ram
    . = ALIGN(8);
 
-   /* Heap */
    _heap_start = .;
+   _heap_end = _heap_start + 1M;
 }
 
 /* The initialization code will need some symbols to know how to
@@ -55,4 +53,3 @@ rom_data_start = LOADADDR(.data);
 
 _stack_start = ORIGIN(ram) + LENGTH(ram);
 
-_heap_end = _heap_start + heap_size;

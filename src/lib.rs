@@ -8,6 +8,7 @@
 mod srv;
 mod dev;
 mod emu;
+mod util;
 /*
 	Idk Stuff Here ;)
  */
@@ -15,9 +16,11 @@ use core::{arch::asm, panic::PanicInfo};
 use dev::uart::Uart;
 use srv::console::Console;
 use dev::pci;
+use util::alloc::Alloc;
 /*
 	Globals
 */
+const TEST_STRING: &str = "TEST";
 
 // ///////////////////////////////////
 // / RUST MACROS
@@ -77,7 +80,6 @@ fn get_dts() -> u64 {
 			out(reg) value
 		);
 	}
-	println!("device tree at: {:X}", value);
 	return value;
 }
 
@@ -95,6 +97,7 @@ fn kmain() {
 	println!("Device ID: {:#X}", pci.device_id());
 	// println!("Vendor ID: {:#X}", result);/
 	// kconsole.listen();
+	Alloc::init();
 	loop {}
 }
 
