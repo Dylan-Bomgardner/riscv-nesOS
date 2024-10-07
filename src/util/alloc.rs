@@ -14,18 +14,14 @@ static mut KMEM_HEAD: *const usize = null_mut();
 static mut KMEM_END: *const usize = null_mut();
 static mut KMEM_NUM_PAGES: usize = 0;
 
-pub struct Alloc {
-    start: *const usize,
-    end:   *const usize,
-    num_pages:    usize,
-}
+pub struct Alloc;
 
 #[bitfield(u8)]
 struct Page {
     taken: bool,
     last: bool,
     #[bits(6)]
-    padding: usize
+    num_reserved: usize
 }
 
 impl Alloc {
@@ -42,6 +38,7 @@ impl Alloc {
             let mut temp_page = KMEM_HEAD as *mut Page;
             for i in 0..KMEM_NUM_PAGES {
                 (*temp_page).set_taken(false);
+                (*temp_page).set_num_reserved(0);
                 // If at last page
                 if i == KMEM_NUM_PAGES - 1 {
                     (*temp_page).set_last(true);
@@ -54,6 +51,23 @@ impl Alloc {
                 println!("SOMETHING WENT WRONG");
             }
         }
+    }
+
+    pub fn get_page() -> *const Page {
+        let mut page;
+        unsafe {
+            page = KMEM_HEAD as *mut Page;
+
+            for i in 0..KMEM_NUM_PAGES {
+                if !(*page).taken() {
+                    (*page).set_taken(true);
+                    (*page).set_num_reserved(1);
+                    break;
+                }
+                page = page.offset(PAGE_SIZE as isize);
+            }
+        }
+        return page;
     }
 
     fn get_heap_start() -> *const usize {
