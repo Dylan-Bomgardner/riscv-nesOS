@@ -20,3 +20,4 @@ opt-level = 0
 
 [dependencies]
 embedded-graphics = "0.8.1"
+bitfield-struct = "0.7"

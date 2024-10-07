@@ -90,12 +90,9 @@ fn kmain() {
 	// let kconsole: Console = Console::new(kernel_uart);
 	println!("Hello, World!");
 
-	let mut result: u16 = pci::pci_check_vendor(0, 0);
-	println!("PCI device: {:X}\n", result);
-	result = pci::pci_check_vendor(0, 1);
-	println!("PCI device: {:X}\n", result);
-	result = pci::pci_check_vendor(0,2);
-	println!("PCI device: {:X}\n", result);
+	let pci = pci::PCI::get(0, 1);
+	println!("Vendor ID: {:#X}", pci.vendor_id());
+	println!("Device ID: {:#X}", pci.device_id());
 	// println!("Vendor ID: {:#X}", result);/
 	// kconsole.listen();
 	loop {}
