@@ -22,7 +22,7 @@ _start:
 
     la		t2, asm_trap_vector
 	csrw	mtvec, t2
-    call kmain
+    call k_init
     
 core_loop:
     j core_loop

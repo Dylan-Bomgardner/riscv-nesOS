@@ -1,6 +1,7 @@
 use crate::println;
 use crate::print;
 use core::ptr::null_mut;
+use core::option::Option;
 use bitfield_struct::bitfield;
 
 const PAGE_SIZE: usize = 4096;
@@ -17,7 +18,7 @@ static mut KMEM_NUM_PAGES: usize = 0;
 pub struct Alloc;
 
 #[bitfield(u8)]
-struct Page {
+pub struct Page {
     taken: bool,
     last: bool,
     #[bits(6)]
@@ -25,7 +26,6 @@ struct Page {
 }
 
 impl Alloc {
-
     pub fn init() {
         unsafe {
             let heap_size = (&_heap_end as *const usize as usize) - (&_heap_start as *const usize as usize);
@@ -35,7 +35,7 @@ impl Alloc {
             KMEM_NUM_PAGES = heap_size / PAGE_SIZE;
 
             // Initializing pages.
-            let mut temp_page = KMEM_HEAD as *mut Page;
+             let mut temp_page = KMEM_HEAD as *mut Page;
             for i in 0..KMEM_NUM_PAGES {
                 (*temp_page).set_taken(false);
                 (*temp_page).set_num_reserved(0);
@@ -53,12 +53,12 @@ impl Alloc {
         }
     }
 
-    pub fn get_page() -> *const Page {
+    pub fn get_page() -> Option<*mut Page> {
         let mut page;
         unsafe {
             page = KMEM_HEAD as *mut Page;
 
-            for i in 0..KMEM_NUM_PAGES {
+            for _ in 0..KMEM_NUM_PAGES {
                 if !(*page).taken() {
                     (*page).set_taken(true);
                     (*page).set_num_reserved(1);
@@ -66,8 +66,15 @@ impl Alloc {
                 }
                 page = page.offset(PAGE_SIZE as isize);
             }
+            if (page == KMEM_END as *mut Page) {return None;}
         }
-        return page;
+        return Some(page);
+    }
+
+    pub fn free_page(page: *mut Page) {
+        unsafe {
+            (*page).set_taken(false);
+        }
     }
 
     fn get_heap_start() -> *const usize {

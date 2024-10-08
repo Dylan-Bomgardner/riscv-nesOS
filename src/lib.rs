@@ -16,7 +16,7 @@ use core::{arch::asm, panic::PanicInfo};
 use dev::uart::Uart;
 use srv::console::Console;
 use dev::pci;
-use util::alloc::Alloc;
+use util::{alloc::Alloc};
 /*
 	Globals
 */
@@ -83,6 +83,13 @@ fn get_dts() -> u64 {
 	return value;
 }
 
+// Put all inits here.
+#[no_mangle]
+fn k_init() {
+	Alloc::init();
+	kmain();
+}
+
 #[no_mangle]
 extern "C"
 fn kmain() {
@@ -97,7 +104,7 @@ fn kmain() {
 	println!("Device ID: {:#X}", pci.device_id());
 	// println!("Vendor ID: {:#X}", result);/
 	// kconsole.listen();
-	Alloc::init();
+	
 	loop {}
 }
 
