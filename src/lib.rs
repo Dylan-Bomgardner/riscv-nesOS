@@ -16,7 +16,7 @@ use core::{arch::asm, panic::PanicInfo};
 use dev::uart::Uart;
 use srv::console::Console;
 use dev::pci;
-use util::{alloc::Alloc};
+use util::{alloc::Alloc, thread::Thread};
 /*
 	Globals
 */
