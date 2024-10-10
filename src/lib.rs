@@ -2,6 +2,8 @@
 // Caedin and Dylan
 // 10/1/2025
 #![no_std]
+#![allow(unused_variables)]
+#![allow(dead_code)]
 /*
 	Mods
 */
@@ -12,7 +14,7 @@ mod util;
 /*
 	Idk Stuff Here ;)
  */
-use core::{arch::asm, panic::PanicInfo};
+use core::{arch::asm, panic::PanicInfo, assert};
 use dev::uart::Uart;
 use srv::console::Console;
 use dev::pci;
@@ -91,7 +93,6 @@ fn k_init() {
 }
 
 #[no_mangle]
-extern "C"
 fn kmain() {
 	// Getting the device tree from a register
 	let device_tree_addr: u64 =  get_dts();
@@ -104,7 +105,32 @@ fn kmain() {
 	println!("Device ID: {:#X}", pci.device_id());
 	// println!("Vendor ID: {:#X}", result);/
 	// kconsole.listen();
-	
+
+
+	// Testing allocator
+	println!("[TESTING]: Testing Allocator and Free");
+	let page = Alloc::get(2).expect("Page not allocated");
+	let page2 = Alloc::get(2).expect("Page not allocated");
+	let page3 = Alloc::get(2).expect("err");
+	let page4 = Alloc::get(2).expect("err");
+	let page5 = Alloc::get(2).expect("");
+	Alloc::free(page2);
+	Alloc::free(page4);
+	let page6 = Alloc::get(1).expect("err");
+	let page7 = Alloc::get(1).expect("err");
+
+	let page8 = Alloc::get(1).expect("err");
+	let page9 = Alloc::get(1).expect("err");
+	let page10 = Alloc::get(1).expect("err");
+
+	assert!(((page5 as *const usize as usize) - (page7 as *const usize as usize)) / 4098 == 5, "[FAIL]");
+	assert!(((page5 as *const usize as usize) - (page7 as *const usize as usize)) % 4098 == 0, "FAIL");
+	assert!(((page9 as *const usize as usize) - (page7 as *const usize as usize)) / 4098 == 4, "FAIL");
+	assert!(((page9 as *const usize as usize) - (page7 as *const usize as usize)) % 4098 == 0, "FAIL");
+	assert!(((page10 as *const usize as usize) - (page as *const usize as usize)) / 4098 == 10, "FAIL");
+	assert!(((page10 as *const usize as usize) - (page as *const usize as usize)) % 4098 == 0, "FAIL");
+	println!("[PASS]");
+
 	loop {}
 }
 
