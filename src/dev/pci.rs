@@ -1,13 +1,20 @@
 use crate::println;
 use crate::print;
+use core::fmt;
+use core::result::Result;
 use core::fmt::Display;
-use bitfield_struct::bitfield;
+use bitfield_struct::{bitfield};
 const PCI_BASE: u32 = 0x3000_0000;
-const PCI_CONFIG_ADDRESS: u32 = 0xCF8;
-const PCI_CONFIG_DATA: u32 = 0xCFC;
+#[derive(Debug)]
+pub enum PCIError
+{
+    InvalidRegister,
+    InvalidDevice,
+}
 
 
-//make it so the layout in memory is eact
+
+
 #[bitfield(u16)]
 pub struct PCICommandReg {
     ///I/O Space - 
@@ -140,17 +147,14 @@ pub struct PCIBISTReg {
     pub bist_capable: bool,
 }
 
-#[bitfield(u128)]
 pub struct PCICommonHeader {
     //32
     pub vendor_id: u16,
     pub device_id: u16,
 
     //32
-    #[bits(16)]
-    pub command: PCICommandReg,
-    #[bits(16)]
-    pub status: PCIStatusReg,
+    pub command: *mut PCICommandReg,
+    pub status:  *mut PCIStatusReg,
 
     //32
     pub revision_id: u8,
@@ -161,12 +165,9 @@ pub struct PCICommonHeader {
 
     pub cache_line_size: u8,
     pub latency_timer: u8,
-    #[bits(7)]
     pub header_type: u8,
-    #[bits(1)]
     pub multi_function: bool,
-    #[bits(8)]
-    pub bist: PCIBISTReg,
+    pub bist: *mut PCIBISTReg,
 }
 
 
@@ -175,8 +176,37 @@ pub struct PCICommonHeader {
 impl PCICommonHeader
 {
     pub fn get(bus: u8, slot: u8) -> PCICommonHeader {
-        let pci = unsafe { &mut *(pci_device_address(bus, slot) as *mut PCICommonHeader) };
-        *pci
+        let pci_address = pci_device_address(bus, slot) as *mut u32;
+        
+        unsafe 
+        {
+            let pci_address_16 = pci_address as *mut u16;
+            let command_address = pci_address_16.add(2) as *mut u16;
+            let status_address = pci_address_16.add(3) as *mut u16;
+
+            let bist_address = (pci_address as *mut u8).add(0xC) as *mut u8;
+
+            let bist = bist_address as *mut PCIBISTReg;
+
+            PCICommonHeader {
+                vendor_id: pci_address.read_volatile() as u16,
+                device_id: (pci_address.read_volatile() >> 16) as u16,
+                command: command_address as *mut PCICommandReg,
+                status: status_address as *mut PCIStatusReg,
+                revision_id: (pci_address.add(2).read_volatile()) as u8,
+                prog_if: (pci_address.add(2).read_volatile() >> 8) as u8,
+                subclass: (pci_address.add(2).read_volatile() >> 16) as u8,
+                class_code: (pci_address.add(2).read_volatile() >> 24) as u8,
+
+                cache_line_size: pci_address.add(3).read_volatile() as u8,
+                latency_timer: (pci_address.add(3).read_volatile() >> 8) as u8,
+                header_type: (pci_address.add(3).read_volatile() >> 16) as u8,  
+                multi_function: ((pci_address.add(3).read_volatile() >> 23) & 1) != 0,
+                bist: bist,
+                
+    
+            }
+        }
     }
 }
 #[bitfield(u16)]
@@ -203,7 +233,7 @@ pub struct PCICapabilitiesList {
 
 }
 
-pub struct PCIHeader0
+pub struct PCIDevice
 {
     pub base_address: *mut u32,
     pub header: PCICommonHeader,
@@ -216,18 +246,25 @@ pub struct PCIHeader0
     pub interrupt_pin: u8,
     pub min_grant: u8,
     pub max_latency: u8,
+    pub address_range: u32,
 }
 
 
 
-impl PCIHeader0
+impl PCIDevice
 {
-    pub fn get(bus: u8, slot: u8) -> PCIHeader0 {
+    pub fn get(bus: u8, slot: u8) -> PCIDevice {
         let addr = pci_device_address(bus, slot) as *mut u32;
         let header = PCICommonHeader::get(bus, slot);
         unsafe
         {
-            PCIHeader0
+            let bar0 = addr.add(4);
+            let original = bar0.read_volatile();
+            bar0.write_volatile(0xFFFF_FFFF);
+            let result = bar0.read_volatile();
+            let range = !(result & 0xFFFF_FFF0) + 1;
+            bar0.write_volatile(original);
+            PCIDevice
             {
                 base_address: addr,
                 header,
@@ -240,23 +277,37 @@ impl PCIHeader0
                 interrupt_pin: (addr.add(0xF).read_volatile() >> 8) as u8,
                 min_grant: (addr.add(0xF).read_volatile() >> 16) as u8,
                 max_latency: (addr.add(0xF).read_volatile() >> 24) as u8,
+                address_range: range,
             }
         }
     }
-    pub fn read_bar(&self, index: usize) -> u32 {
-        unsafe { *self.base_address.add(4+index) }
+    pub fn bar_read(&self, index: usize) -> u32 {
+        //require that index is less than 6       
+        unsafe { self.get_bar_address(index).read_volatile() }
     }
-    pub fn write_bar(&self, index: usize, value: u32) {
-        unsafe { self.base_address.add(4+index).write_volatile(value); }
+    
+    pub fn bar_write(&self, index: usize, value: u32) {
+            unsafe { self.get_bar_address(index).write_volatile(value); }
+    }
+    pub unsafe fn read(&self, offset: usize) -> u32 {
+        self.base_address.add(offset).read_volatile()
+
+    }
+    pub unsafe fn write<T>(&self, offset: usize, value: T) {
+        core::ptr::write_volatile(self.base_address.add(offset) as *mut T, value);
+    }
+    pub unsafe fn get_bar_address(&self, index: usize) -> *mut u32 {
+        self.base_address.add(4+index)
+    }
+    pub fn get_bar_size(&self, index: usize) -> u32 {
+        let original = self.bar_read(index);
+        self.bar_write(index, 0xFFFF_FFFF);
+        let result = self.bar_read(index);
+        let size = !(result & 0xFFFF_FFF0) + 1;
+        self.bar_write(index, original);
+        size
     }
 }
-
-pub struct PCIDevice {
-    pub header: PCICommonHeader,
-
-}
-
-
 
 //static PCI function wall read word
 pub fn pci_device_address(bus: u8, slot: u8) -> u32 {
@@ -277,10 +328,3 @@ pub fn pci_function_address(bus: u8, slot: u8, func: u8) -> u32 {
     (lfunc << 12)) as u32
 }
 
-//make a PCI Error type
-pub enum PCIError {
-    InvalidDevice,
-    InvalidFunction,
-    InvalidBus,
-    InvalidSlot,
-}

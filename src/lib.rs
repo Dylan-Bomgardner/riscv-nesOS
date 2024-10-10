@@ -17,7 +17,7 @@ mod util;
 use core::{arch::{asm}, panic::PanicInfo, assert};
 use dev::uart::Uart;
 use srv::console::Console;
-use dev::pci;
+use dev::{pci, vga};
 use util::{alloc::Alloc, thread::Thread};
 /*
 	Globals
@@ -100,27 +100,24 @@ fn kmain() {
 	// let kconsole: Console = Console::new(kernel_uart);
 	println!("Hello, World!");
 	//printsizeof PCIHeader0
-	println!("Size of PCIHeader0: {}", core::mem::size_of::<pci::PCIHeader0>());
-	let pci = pci::PCIHeader0::get(0, 1);
-	println!("Vendor ID: {:#X}", pci.header.vendor_id());
-	println!("Device ID: {:#X}", pci.header.device_id());
-	//print out address
-	println!("Subsytem Vendor ID: {:#X}", pci.subsystem_vendor_id);
-	println!("Subsytem ID: {:#X}", pci.subsystem_id);
-	println!("Interrupt Line: {:#X}", pci.interrupt_line);
-	println!("Interrupt Pin: {:#X}", pci.interrupt_pin);
-	println!("Expansion ROM Base Address: {:#X}", pci.expansion_rom_base_address as u32);
+	println!("Size of PCIHeader0: {}", core::mem::size_of::<pci::PCIDevice>());
+	let pci = pci::PCIDevice::get(0, 1);
+	println!("Vendor ID: {:#X}", pci.header.vendor_id);
+	println!("Device ID: {:#X}", pci.header.device_id);
+	println!("Class Code: {:#X}", pci.header.class_code);
+	println!("Subclass: {:#X}", pci.header.subclass);
+	println!("Address Range: {:#X}", pci.address_range);
+	//check the first outside the address range
+	// pci.header.command().set_memory_space(true);
 	unsafe {
-		let cap = pci.capabilities_head as *const pci::PCICapabilitiesList;
-		println!("Capabilities Head: {:#X}", (*cap).capability_id());
-		println!("Capabilities Next: {:#X}", (*cap).next());
-		let next = pci.base_address.add((*cap).next() as usize) as *const pci::PCICapabilitiesList;
-		println!("Capabilities Next: {:#X}", (*next).capability_id());
+	println!("Address {:#X}", pci.read(0x10));
 	}
+
 	//read the value back
 	// println!("Vendor ID: {:#X}", result);/
 	// kconsole.listen();
 
+	let mut vga = VGA::new(0, 1);
 
 	// Testing allocator
 	println!("[TESTING]: Testing Allocator and Free");
