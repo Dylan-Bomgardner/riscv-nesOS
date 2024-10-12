@@ -32,8 +32,8 @@ impl Alloc {
             let heap_size = (&_heap_end as *const usize as usize) - (&_heap_start as *const usize as usize);
 
             // Initialize static members.
-            KMEM_HEAD = Alloc::get_heap_start();
-            KMEM_END = Alloc::get_heap_end();
+            KMEM_HEAD = Self::get_heap_start();
+            KMEM_END = Self::get_heap_end();
             KMEM_NUM_PAGES = heap_size / PAGE_SIZE;
             
             // Initializing pages.
@@ -66,7 +66,7 @@ impl Alloc {
             let mut temp_page = page;
             let mut num_pages_curr = 1;
             while !(*temp_page).last() {
-                // println!("Addr: {}", (*page).num_reserved() as isize);
+                // If the current page is taken jump to the next section.
                 if (*page).taken() {
                     let num_pages_to_jump = (*page).num_reserved();
                     page = page.offset((PAGE_SIZE * num_pages_to_jump / 2) as isize);

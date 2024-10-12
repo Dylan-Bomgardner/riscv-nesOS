@@ -131,6 +131,15 @@ fn kmain() {
 	assert!(((page10 as *const usize as usize) - (page as *const usize as usize)) % 4098 == 0, "FAIL");
 	println!("[PASS]");
 
+	Alloc::free(page);
+	Alloc::free(page3);
+	Alloc::free(page5);
+	Alloc::free(page6);
+	Alloc::free(page7);
+	Alloc::free(page8);
+	Alloc::free(page9);
+	Alloc::free(page10);
+
 	loop {}
 }
 
