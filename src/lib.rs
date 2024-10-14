@@ -118,11 +118,10 @@ fn kmain() {
 	Alloc::free(page4);
 	let page6 = Alloc::get(1).expect("err");
 	let page7 = Alloc::get(1).expect("err");
-
 	let page8 = Alloc::get(1).expect("err");
 	let page9 = Alloc::get(1).expect("err");
 	let page10 = Alloc::get(1).expect("err");
-
+	
 	assert!(((page5 as *const usize as usize) - (page7 as *const usize as usize)) / 4098 == 5, "[FAIL]");
 	assert!(((page5 as *const usize as usize) - (page7 as *const usize as usize)) % 4098 == 0, "FAIL");
 	assert!(((page9 as *const usize as usize) - (page7 as *const usize as usize)) / 4098 == 4, "FAIL");
