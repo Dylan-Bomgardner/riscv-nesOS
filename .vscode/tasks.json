@@ -1,0 +1,43 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "make",
+            "args": ["rust"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$rustc"
+
+        },
+        {
+            "label": "Run QEMU",
+            "type": "shell",
+            "command": "echo 'QEMU started'; qemu-system-riscv64 -cpu rv64 -smp 4 -m 128M -machine virt -bios build/thing.elf -serial stdio -device virtio-vga -device virtio-net-pci -display sdl,gl=on -vga qxl -bios build/thing.elf -S -gdb tcp::1234",
+            "dependsOn": ["Build"],
+            "isBackground": true,
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": ".",
+                            "file": 1,
+                            "location": 2,
+                            "message": 3
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".",
+                        "endsPattern": "QEMU started",
+                    }
+                }
+            ]
+        }
+    ]
+}

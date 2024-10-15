@@ -4,5 +4,5 @@
 *.out
 *.exe
 build
-.vscode
+.vscode/settings.json
 target

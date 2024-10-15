@@ -46,6 +46,7 @@ rust:
 run:
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT)
 debug: rust
+	@echo "Ctrl-A C for QEMU console, then quit to exit"
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT) -S -gdb tcp::1234
 
 dtc:

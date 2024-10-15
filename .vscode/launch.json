@@ -6,24 +6,15 @@
     "configurations": [
         // run just make 
         {
-            "name": "make",
-            "type": "",
+            "name": "Debug RISC-V",
+            "type": "cppdbg",
             "request": "launch",
-            "program": "make",
-            "args": ["debug"],
-            "stopAtEntry": false,
+            "program": "${workspaceFolder}/build/thing.elf",
             "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ],
-            "miDebuggerPath": "/usr/bin/gdb"
+            "miDebuggerPath": "riscv64-unknown-elf-gdb",
+            "miDebuggerServerAddress": "localhost:1234",
+            "stopAtEntry": true,
+            "preLaunchTask": "Run QEMU",
         }
     ]
 }
