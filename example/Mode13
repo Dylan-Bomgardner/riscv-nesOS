@@ -1,0 +1,123 @@
+const MODE_13_REGS: [(VGARegister, u8); 27] = [
+    (MISCELLANEOUS_OUTPUT_REGISTER, 0x63),
+
+    // (0xD4, 0x11, 0x0E),
+    (HORIZONTAL_TOTAL, 0x5F),
+    (HORIZONTAL_DISPLAY_END, 0x4F),
+    (HORIZONTAL_BLANK_START, 0x50),
+    (HORIZONTAL_BLANK_END, 0x82),
+    (HORIZONTAL_RETRACE_START, 0x54),
+    (HORIZONTAL_RETRACE_END, 0x80),
+    (VERTICAL_TOTAL, 0xBF),
+    (OVERFLOW_REGISTER, 0x1F),
+    (PRESET_ROW_SCAN, 0x00),
+    (MAXIMUM_SCAN_LINE, 0x41),
+    (VERTICAL_RETRACE_START, 0x9C),
+    (VERTICAL_RETRACE_END, 0x8E),
+    (VERTICAL_DISPLAY_END, 0x8F),
+    (LOGICAL_WIDTH, 0x28),
+    (UNDERLINE_LOCATION, 0x40),
+    (VERTICAL_BLANK_START, 0x96),
+    (VERTICAL_BLANK_END, 0xB9),
+    (MODE_CONTROL, 0xA3),
+
+    (CLOCK_MODE_98_DOT_MODE, 0x01),
+    (MAP_MASK, 0x0F),
+    (SEQUENCER_MEMORY_MODE, 0x0E),
+
+    (SETRESET, 0x00),
+    (GRAPHICS_MODE, 0x40),
+    (MISCELLANEOUS, 0x05),
+
+    (ATTRIBUTE_MODE_CONTROL, ATTRIBUTE_8BIT | ATTRIBUTE_ATGE),
+    (HORIZONTAL_PANNING, 0),
+];
+
+impl Mode13Display {
+    #[inline]
+    pub unsafe fn new(base: *mut u8) -> Self {
+        Self { base, last_x: 0, last_y: 10, last_length: 0 }
+    }
+
+    pub fn set_pixel(&mut self, coord: Point, color: Rgb888) -> Option<()> {
+        
+        if let Ok((x @ 0..=319, y @ 0..=199)) = coord.try_into() {
+            let index = x as usize + y as usize * 320;
+
+            let r = _color_component_to_safe_color(color.r());
+            let g = _color_component_to_safe_color(color.g());
+            let b = _color_component_to_safe_color(color.b());
+            let color = 16 + r + g * 6 + b * 36;
+
+            unsafe {
+                self.base.add(index).write_volatile(color);
+            }
+
+            Some(())
+        } else {
+            None
+        }
+    }
+    
+    pub fn print_with_color(&mut self, text: &str, color: Rgb888) {
+
+        let x = self.last_x + self.last_length; 
+        self.print_pos(text, x, self.last_y, color);
+    }
+    pub fn print_pos(&mut self, text: &str, x: i32, y: i32, color: Rgb888) {
+        Text::new(
+            text,
+            Point::new(x, y),
+            MonoTextStyleBuilder::new()
+                .font(&FONT_6X12)
+                .text_color(color)
+                .build(),
+        )
+        .draw(self)
+        .unwrap();
+        
+        self.last_x = x;
+        self.last_y = y;
+        self.last_length = text.len() as i32 * 6;
+    }
+    pub fn println_with_color(&mut self, text: &str, color: Rgb888) {
+        self.print_pos(text, 0, self.last_y + 10, color);
+    }
+
+    pub fn println(&mut self, text: &str) {
+        self.print_pos(text, 0, self.last_y + 10, Rgb888::WHITE);
+    }
+
+    pub fn print(&mut self, text: &str) {
+        self.print_with_color(text, Rgb888::WHITE);
+    }
+
+    pub fn clear(&mut self) {
+        for y in 0..200 {
+            for x in 0..320 {
+                self.set_pixel(Point::new(x, y), Rgb888::BLACK);
+            }
+        }
+    }
+}
+
+impl DrawTarget for Mode13Display {
+    type Color = Rgb888;
+    type Error = Infallible;
+
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        for Pixel(coord, color) in pixels.into_iter() {
+            self.set_pixel(coord, color);
+        }
+        Ok(())
+    }
+}
+
+impl OriginDimensions for Mode13Display {
+    fn size(&self) -> Size {
+        Size::new(320, 200)
+    }
+}

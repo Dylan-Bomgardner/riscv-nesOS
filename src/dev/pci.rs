@@ -10,6 +10,7 @@ pub enum PCIError
 {
     InvalidRegister,
     InvalidDevice,
+    InvalidAddress,
 }
 
 
@@ -246,7 +247,6 @@ pub struct PCIDevice
     pub interrupt_pin: u8,
     pub min_grant: u8,
     pub max_latency: u8,
-    pub address_range: u32,
 }
 
 
@@ -258,12 +258,6 @@ impl PCIDevice
         let header = PCICommonHeader::get(bus, slot);
         unsafe
         {
-            let bar0 = addr.add(4);
-            let original = bar0.read_volatile();
-            bar0.write_volatile(0xFFFF_FFFF);
-            let result = bar0.read_volatile();
-            let range = !(result & 0xFFFF_FFF0) + 1;
-            bar0.write_volatile(original);
             PCIDevice
             {
                 base_address: addr,
@@ -277,7 +271,6 @@ impl PCIDevice
                 interrupt_pin: (addr.add(0xF).read_volatile() >> 8) as u8,
                 min_grant: (addr.add(0xF).read_volatile() >> 16) as u8,
                 max_latency: (addr.add(0xF).read_volatile() >> 24) as u8,
-                address_range: range,
             }
         }
     }
@@ -296,10 +289,10 @@ impl PCIDevice
     pub unsafe fn write<T>(&self, offset: usize, value: T) {
         core::ptr::write_volatile(self.base_address.add(offset) as *mut T, value);
     }
-    pub unsafe fn get_bar_address(&self, index: usize) -> *mut u32 {
+    unsafe fn get_bar_address(&self, index: usize) -> *mut u32 {
         self.base_address.add(4+index)
     }
-    pub fn get_bar_size(&self, index: usize) -> u32 {
+    pub fn get_bar_address_size(&self, index: usize) -> u32 {
         let original = self.bar_read(index);
         self.bar_write(index, 0xFFFF_FFFF);
         let result = self.bar_read(index);

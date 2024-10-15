@@ -17,8 +17,9 @@ mod util;
 use core::{arch::{asm}, panic::PanicInfo, assert};
 use dev::uart::Uart;
 use srv::console::Console;
-use dev::{pci, vga};
+use dev::{pci, vga::*};
 use util::{alloc::Alloc, thread::Thread};
+use embedded_graphics::{pixelcolor::Rgb888, prelude::RgbColor};
 /*
 	Globals
 */
@@ -106,7 +107,6 @@ fn kmain() {
 	println!("Device ID: {:#X}", pci.header.device_id);
 	println!("Class Code: {:#X}", pci.header.class_code);
 	println!("Subclass: {:#X}", pci.header.subclass);
-	println!("Address Range: {:#X}", pci.address_range);
 	//check the first outside the address range
 	// pci.header.command().set_memory_space(true);
 	unsafe {
@@ -116,8 +116,6 @@ fn kmain() {
 	//read the value back
 	// println!("Vendor ID: {:#X}", result);/
 	// kconsole.listen();
-
-	let mut vga = VGA::new(0, 1);
 
 	// Testing allocator
 	println!("[TESTING]: Testing Allocator and Free");
@@ -152,6 +150,45 @@ fn kmain() {
 	Alloc::free(page9);
 	Alloc::free(page10);
 
+	//print out address
+	for i in 0..6 {
+		println!("BAR{}: {:#X}", i, pci.bar_read(i));
+	}
+	//try to find bochs version
+	
+	let mut vga = dev::vga::VGA::new(0, 1, 0x4000_0000).unwrap();
+	println!("Bochs version: {:#X}", vga.get_bochs_version());
+	let mut display = ModeXDisplay::new(vga, 640, 480);//unsafe { Mode13Display::new(vga.fb) };
+	display.rectangle(0, 0, 256, 240, Rgb888::BLUE);
+	// //write NES in the middle of the rectanlge
+	display.print_pos("Nes", 128, 120, Rgb888::WHITE);
+	// display.clear();
+	
+	// display.rectangle(256, 0, 320-256, 240, Rgb888::WHITE);
+	
+	// display.print_pos("DEBUG", 256, 10, Rgb888::WHITE);
+	// display.print_pos("H", 128, 220, Rgb888::WHITE);
+	// display.print_pos("H", 0, 0, Rgb888::WHITE);
+	// display.clear();
+	// // display.switch_buffer();
+	// //read the value back
+	// // println!("Vendor ID: {:#X}", result);/
+
+	// // kconsole.listen();
+	let mut i = 0;
+	loop {
+		if(i % 2 == 0) {
+			display.rectangle(0, 0, display.width, display.height, Rgb888::WHITE);
+
+		}
+		else {
+			display.rectangle(0, 0, 256, 240, Rgb888::BLUE);
+		}
+		i += 1;
+		// display.swap_buffer();
+		// println!("Swap")
+	}
 	loop {}
+	//get bochs version
 }
 
