@@ -35,6 +35,7 @@ SECTIONS {
    } > ram
    . = ALIGN(8);
 
+   . += 8; /* Don't remove this. Or else everything breaks. */
    _heap_start = .;
    _heap_end = _heap_start + 1M;
 }
