@@ -8,8 +8,8 @@ crate-type = ["staticlib"]
 
 [build]
 target = "riscv64gc-unknown-none-elf"
-
 opt-level = 0
+
 [profile.dev]
 panic = "abort"
 opt-level = 0

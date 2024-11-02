@@ -4,7 +4,7 @@
 #![no_std]
 #![allow(unused_variables)]
 #![allow(dead_code)]
-#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg(not(test))]
 /*
     Mods
 */
