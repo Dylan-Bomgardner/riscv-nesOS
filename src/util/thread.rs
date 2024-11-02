@@ -1,4 +1,3 @@
-
 enum ThreadState {
     Stopped,
     Waiting,

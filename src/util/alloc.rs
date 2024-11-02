@@ -1,15 +1,15 @@
-use crate::println;
 use crate::print;
-use core::ptr::null_mut;
-use core::{mem, assert};
-use core::option::Option;
+use crate::println;
 use bitfield_struct::bitfield;
+use core::option::Option;
+use core::ptr::null_mut;
+use core::{assert, mem};
 
 const PAGE_SIZE: usize = 4096 + 2;
 
 extern "C" {
     static _heap_start: usize;
-    static _heap_end:   usize;
+    static _heap_end: usize;
 }
 
 static mut KMEM_HEAD: *const usize = null_mut();
@@ -23,27 +23,27 @@ pub struct Page {
     taken: bool,
     last: bool,
     #[bits(14)]
-    num_reserved: usize
+    num_reserved: usize,
 }
 
 impl Alloc {
     pub fn init() {
         unsafe {
-            let heap_size = (&_heap_end as *const usize as usize) - (&_heap_start as *const usize as usize);
+            let heap_size =
+                (&_heap_end as *const usize as usize) - (&_heap_start as *const usize as usize);
 
             // Initialize static members.
             KMEM_HEAD = Self::get_heap_start();
             KMEM_END = Self::get_heap_end();
             KMEM_NUM_PAGES = heap_size / PAGE_SIZE;
-            
+
             // Initializing pages.
             let mut temp_page = KMEM_HEAD as *mut Page;
             for i in 0..KMEM_NUM_PAGES {
-                
                 // Initialize fields.
                 (*temp_page).set_taken(false);
                 (*temp_page).set_num_reserved(0);
-                
+
                 // If at last page
                 if i == KMEM_NUM_PAGES - 1 {
                     (*temp_page).set_last(true);
@@ -55,7 +55,10 @@ impl Alloc {
                 temp_page = temp_page.offset(PAGE_SIZE as isize);
             }
 
-            assert!(temp_page > KMEM_END as *mut Page, "Did not initialize all pages");
+            assert!(
+                temp_page > KMEM_END as *mut Page,
+                "Did not initialize all pages"
+            );
         }
     }
 
@@ -101,7 +104,7 @@ impl Alloc {
         unsafe {
             let mut page = ptr as *mut Page;
             page = page.offset(-1);
-            
+
             let num_pages_to_free = (*page).num_reserved();
             for _ in 0..num_pages_to_free {
                 (*page).set_taken(false);
