@@ -33,17 +33,23 @@ QEMU_ARGS += -serial stdio
 # QEMU_ARGS += -monitor stdio
 QEMU_ARGS += -device virtio-vga
 QEMU_ARGS += -device virtio-net-pci
-# QEMU_ARGS += 
+# QEMU_ARGS +=
 
-.PHONY: run clean rust dtc
-all: rust run
+.PHONY: run clean compile dtc run_graphics
 
-rust: 
-	cargo build --target riscv64gc-unknown-none-elf 
+all: compile rungraphics
+
+compile:
+	cargo build --target riscv64gc-unknown-none-elf
 	$(G++) $(G++_ARGS) $(LINKER_SCRIPT) $(INCLUDES) -o $(OUT) $(SOURCES_ASM) $(LIBS) $(LIB) -o $(BUILD_DIR)/$(OUT)
-run:
+
+run: compile
+	$(QEMU) $(QEMU_ARGS) -nographic -monitor none -bios $(BUILD_DIR)/$(OUT)
+
+rungraphics:
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT)
-debug: rust
+
+debug: compile
 	@echo "Ctrl-A C for QEMU console, then quit to exit"
 	$(QEMU) $(QEMU_ARGS) -bios $(BUILD_DIR)/$(OUT) -S -gdb tcp::1234
 

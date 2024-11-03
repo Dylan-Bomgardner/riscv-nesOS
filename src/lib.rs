@@ -168,13 +168,13 @@ fn kmain() {
     Alloc::free(page10);
 
     //print out address
-    for i in 0..6 {
-        println!("BAR{}: {:#X}", i, pci.bar_read(i));
-    }
+    // for i in 0..6 {
+    //     println!("BAR{}: {:#X}", i, pci.bar_read(i));
+    // }
     //try to find bochs version
 
-    let mut vga = dev::vga::VGA::new(0, 1, 0x4000_0000).unwrap();
-    println!("Bochs version: {:#X}", vga.get_bochs_version());
+    let vga = dev::vga::VGA::new(0, 1, 0x4000_0000).unwrap();
+    // println!("Bochs version: {:#X}", vga.get_bochs_version());
     let mut display = ModeXDisplay::new(vga, 640, 480); //unsafe { Mode13Display::new(vga.fb) };
     display.rectangle(0, 0, 256, 240, Rgb888::BLUE);
     // //write NES in the middle of the rectanlge
@@ -195,7 +195,7 @@ fn kmain() {
     let max = 250000000 / 60;
     let mut i = 0;
     loop {
-        if (i == 0) {
+        if i == 0 {
             display.rectangle(0, 0, display.width, display.height, Rgb888::WHITE);
         } else if i == max / 2 {
             display.rectangle(0, 0, display.width, display.height, Rgb888::BLUE);
@@ -203,10 +203,9 @@ fn kmain() {
         i += 1;
         // display.swap_buffer();
         // println!("Swap")
-        if (i == max) {
+        if i == max {
             i = 0;
         }
     }
-    loop {}
     //get bochs version
 }

@@ -1,9 +1,6 @@
 use crate::print;
 use crate::println;
-use crate::read_csr;
-use crate::write_csr;
 use core::arch::asm;
-use embedded_graphics::geometry;
 
 #[allow(dead_code)]
 fn placeholder_handler() {}
@@ -69,7 +66,7 @@ static RISCV_MACHINE_INTERRUPT_HANDLERS: HardwareInterruptTable = HardwareInterr
 };
 
 fn enable_interrupt(register: MachineInterruptRegister) {
-    let read_value: i32;
+    let read_value: usize;
     unsafe {
         asm!(
             "csrr {0}, mie",
@@ -78,7 +75,7 @@ fn enable_interrupt(register: MachineInterruptRegister) {
     }
     println!("BEFORE: {}", read_value);
 
-    let shifted_value = 1 << register as u8;
+    let shifted_value: usize = 1 << (register as u8);
     unsafe {
         asm!(
             "csrr t1, mie",
@@ -88,7 +85,7 @@ fn enable_interrupt(register: MachineInterruptRegister) {
         );
     }
 
-    let read_value: i32;
+    let read_value: usize;
     unsafe {
         asm!(
             "csrr {0}, mie",

@@ -12,10 +12,10 @@ SECTIONS {
       KEEP(*(.text.boot))
    }
 
-   .text : { 
+   .text : {
      KEEP(*(.text))
    }
-   
+
    . = ALIGN(8);
    /* .bss doesn't have any "loadable" content, so it goes straight
       into RAM. We could include `AT> rom`, but because the sections
@@ -28,10 +28,10 @@ SECTIONS {
    /* As described above, we need to get a RAM VMA but a ROM LMA;
       the > and AT> operators achieve this. */
    . = ALIGN(8);
-   
-   .data : { 
+
+   .data : {
       _global_pointer = .;
-      *(.data)   
+      *(.data)
    } > ram
    . = ALIGN(8);
 
@@ -53,4 +53,3 @@ data_end = data_start + SIZEOF(.data);
 rom_data_start = LOADADDR(.data);
 
 _stack_start = ORIGIN(ram) + LENGTH(ram);
-
